@@ -101,6 +101,8 @@ def main(args):
                 cls = CLASSES[cls_id]
                 # x1, y1, x2, y2, conf
                 output.append([bbox[0], bbox[1], bbox[2], bbox[3], score.item()])
+                # print('=======')
+                # print(bbox)
         output = np.array(output)
                 
         info_imgs = frame.shape[:2]
@@ -122,8 +124,7 @@ def main(args):
                     cv2.rectangle(frame, (int(tlwh[0]), int(tlwh[1])), (int(tlwh[0] + tlwh[2]), int(tlwh[1] + tlwh[3])), get_random_color(tid), 2)
                     cv2.putText(frame, str(tid), (int(tlwh[0]), int(tlwh[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
-        end = float(time())
-        
+        end = float(time())     
   
         
 
@@ -146,7 +147,8 @@ def main(args):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')
-    parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/sample_2.mp4')
+    # parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/2024_08_28_13_23_01.mp4')
+    parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
     parser.add_argument('--show',
                         action='store_true',
                         help='Show the results')

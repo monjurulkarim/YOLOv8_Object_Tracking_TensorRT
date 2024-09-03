@@ -38,21 +38,25 @@ CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
            'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
 def calculate_center_point(bbox):
+## TO:DO: Needs to update
     x1, y1, x2, y2 = bbox
     return ((x1 + x2) / 2, (y1 + y2) / 2)
 
 def calculate_heading(prev_center, current_center):
+## TO:DO: Needs to update
     dx = current_center[0] - prev_center[0]
     dy = current_center[1] - prev_center[1]
     return math.degrees(math.atan2(dy, dx)) % 360
 
 def calculate_speed(prev_center, current_center, time_diff):
+## TO:DO: Needs to update
     dx = current_center[0] - prev_center[0]
     dy = current_center[1] - prev_center[1]
     distance = math.sqrt(dx**2 + dy**2)
     return distance / time_diff if time_diff > 0 else 0
 
 def calculate_size(bbox):
+## This is just for testing udp data transfer. TO:DO: Needs to update
     x1, y1, x2, y2 = bbox
     width = x2 - x1
     height = y2 - y1
@@ -178,6 +182,7 @@ def main(args):
             # class_name = CLASSES.get(class_ids[tid], "Unknown")
             # class_name = CLASSES.get(class_ids[tid], "Unknown")
 
+            ## Test: UDP data 
             frame_data.append({
                 "Class": class_names[tid],
                 "x": center[0],
@@ -224,8 +229,8 @@ def main(args):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')
-    parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/001.mp4')
-    # parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
+    #parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/001.mp4')
+    parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
     parser.add_argument('--show',
                         action='store_true',
                         help='Show the results')
