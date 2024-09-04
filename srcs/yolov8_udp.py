@@ -17,6 +17,8 @@ import random
 import socket
 import json
 import math
+import threading
+import queue
 # import time
 
 
@@ -76,7 +78,7 @@ class ROI:
         self.y2 = y2
         self.roi_id = roi_id
         self.count = 0
-        
+
 
 DICT_ROIS = {}
 DEBOUNCE_PERIOD = timedelta(seconds=2)
@@ -89,6 +91,15 @@ def get_random_color(id):
     if id not in color_dict:
         color_dict[id] = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     return color_dict[id]
+
+
+def udp_sender(queue, sock, UDP_IP, UDP_PORT):
+    while True:
+        frame_data = queue.get()
+        if frame_data is None:
+            break
+        json_data = json.dumps(frame_data)
+        sock.sendto(json_data.encode(), (UDP_IP, UDP_PORT))
 
 
 
@@ -107,16 +118,24 @@ def main(args):
     Engine.set_desired(['num_dets', 'bboxes', 'scores', 'labels'])
 
     # Set up UDP socket
-    UDP_IP = "128.95.204.54"
-    UDP_PORT = 5005
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    #UDP_IP = "128.95.204.54"
+    #UDP_PORT = 5005
+    #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+
+    # Create a queue for UDP data
+    #udp_queue = queue.Queue()
+
+    # Start UDP sender thread
+    #udp_thread = threading.Thread(target=udp_sender, args=(udp_queue, sock, UDP_IP, UDP_PORT))
+    #udp_thread.start()
 
     fps = 0
     # input video
     cap = cv2.VideoCapture(args.vid)
     # input webcam
     # cap = cv2.VideoCapture(0)
-    
+
     # video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     # video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     # out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 20, (video_width,video_height))
@@ -128,33 +147,33 @@ def main(args):
 
     while(True):
         ret, frame = cap.read()
-        
+
         if frame is None:
             print('No image input!')
             continue
 
         current_time = time()
-        
+
         start = float(time())
         fps_str = "FPS:"
         fps_str += "{:.2f}".format(fps)
         bgr = frame
         bgr, ratio, dwdh = letterbox(bgr, (W, H))
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-        
+
         tensor = blob(rgb, return_seg=False)
-        
+
         dwdh = torch.asarray(dwdh * 2, dtype=torch.float32, device=device)
-        
+
         tensor = torch.asarray(tensor, device=device)
-        
+
         data = Engine(tensor)
         bboxes, scores, labels = det_postprocess(data)
         # print(labels)
-        
+
         if bboxes.numel() == 0:
             continue
-        
+
         bboxes -= dwdh
         bboxes /= ratio
         tracker_input = np.concatenate([bboxes.cpu().numpy(), scores.cpu().numpy()[:, None]], axis=1)
@@ -166,7 +185,7 @@ def main(args):
             tid = t.track_id
             bbox = [tlwh[0], tlwh[1], tlwh[0] + tlwh[2], tlwh[1] + tlwh[3]]
             center = calculate_center_point(bbox)
-            
+
             if tid not in class_names:
                 class_index = int(labels[len(class_names)].item())
                 class_names[tid] = CLASSES[class_index] if class_index < len(CLASSES) else "Unknown"
@@ -182,7 +201,7 @@ def main(args):
             # class_name = CLASSES.get(class_ids[tid], "Unknown")
             # class_name = CLASSES.get(class_ids[tid], "Unknown")
 
-            ## Test: UDP data 
+            ## Test: UDP data
             frame_data.append({
                 "Class": class_names[tid],
                 "x": center[0],
@@ -197,40 +216,47 @@ def main(args):
 
             prev_centers[tid] = center
             prev_times[tid] = current_time
-            
+
             if args.show:
-                cv2.rectangle(frame, (int(tlwh[0]), int(tlwh[1])), 
-                              (int(tlwh[0] + tlwh[2]), int(tlwh[1] + tlwh[3])), 
+                cv2.rectangle(frame, (int(tlwh[0]), int(tlwh[1])),
+                              (int(tlwh[0] + tlwh[2]), int(tlwh[1] + tlwh[3])),
                               get_random_color(tid), 2)
-                cv2.putText(frame, f"{class_names[tid]}-{tid}", (int(tlwh[0]), int(tlwh[1])), 
+                cv2.putText(frame, f"{class_names[tid]}-{tid}", (int(tlwh[0]), int(tlwh[1])),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                # cv2.putText(frame, f"{class_name}-{tid}", (int(tlwh[0]), int(tlwh[1])), 
+                # cv2.putText(frame, f"{class_name}-{tid}", (int(tlwh[0]), int(tlwh[1])),
                 #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
-        # Serialize and send data over UDP
-        json_data = json.dumps(frame_data)
-        sock.sendto(json_data.encode(), (UDP_IP, UDP_PORT))
-        
-        end = float(time())     
+
+        # # Serialize and send data over UDP
+        # json_data = json.dumps(frame_data)
+        # sock.sendto(json_data.encode(), (UDP_IP, UDP_PORT))
+         # Put frame data in queue for UDP sending
+        #udp_queue.put(frame_data)
+
+        end = float(time())
         fps = 1/(end - start)
-        
+
         if args.show:
             cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow("YOLOv8 ByteTrack", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
+    # cap.release()
+    # cv2.destroyAllWindows()
+    # sock.close()
+    # Cleanup
+    #udp_queue.put(None)  # Signal to stop UDP sender thread
+    #udp_thread.join()
     cap.release()
     cv2.destroyAllWindows()
-    sock.close()
-
+    #sock.close()
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')
-    #parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/001.mp4')
-    parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
+    parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/sample_1.mp4')
+    #parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
     parser.add_argument('--show',
                         action='store_true',
                         help='Show the results')
@@ -245,4 +271,3 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     main(args)
-
