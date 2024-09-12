@@ -5,7 +5,7 @@ import cv2
 from pathlib import Path
 import torch
 import ctypes
-from bytetrack.byte_tracker import BYTETracker
+from bytetrack.dev_byte_tracker import BYTETracker
 
 from config import CLASSES, COLORS
 from models.torch_utils import det_postprocess
@@ -92,7 +92,6 @@ def main(args):
         bgr, ratio, dwdh = letterbox(bgr, (W, H))
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         
-        
         tensor = blob(rgb, return_seg=False)
         
         dwdh = torch.asarray(dwdh * 2, dtype=torch.float32, device=device)
@@ -110,13 +109,16 @@ def main(args):
         bboxes /= ratio
         
         output = []
+
         for (bbox, score, label) in zip(bboxes, scores, labels):
             if score.item() > 0.2:
                 bbox = bbox.round().int().tolist()
                 cls_id = int(label)
+
                 cls = CLASSES[cls_id]
                 # x1, y1, x2, y2, conf
-                output.append([bbox[0], bbox[1], bbox[2], bbox[3], score.item()])
+                output.append([bbox[0], bbox[1], bbox[2], bbox[3], score.item(), cls_id]) #10
+             
         output = np.array(output)
                 
         info_imgs = frame.shape[:2]
@@ -127,12 +129,17 @@ def main(args):
             online_tlwhs = []
             online_ids = []
             online_scores = []
+            online_cls = []
             for t in online_targets:
                 tlwh = t.tlwh
                 tid = t.track_id
+                clss = t.cls
+                class_name = CLASSES[int(clss)]
                 online_tlwhs.append(tlwh)
                 online_ids.append(tid)
                 online_scores.append(t.score)
+                online_cls.append(t.class_name)
+
                 
                 if args.show:
                     cv2.rectangle(frame, (int(tlwh[0]), int(tlwh[1])), (int(tlwh[0] + tlwh[2]), int(tlwh[1] + tlwh[3])), get_random_color(tid), 2)
