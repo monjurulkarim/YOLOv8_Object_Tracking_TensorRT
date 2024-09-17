@@ -17,6 +17,7 @@ import random
 from math import radians, cos, sin, asin, sqrt
 import math
 from pyproj import Transformer
+import csv
 
 # detection model classes
 CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -142,8 +143,18 @@ def apply_mask(frame):
     mask = cv2.fillPoly(np.zeros_like(frame), np.array([roi_vertices], np.int32), (255, 255, 255))
     return cv2.bitwise_and(frame, mask)
 
+from datetime import datetime
 
-def main(args):
+def process_timestamp(time_str):
+    time_format = "%Y-%m-%d %H:%M:%S.%f"
+    time_obj = datetime.strptime(time_str, time_format)
+    timestamp_in_seconds = time_obj.timestamp()
+    timestamp_in_seconds_with_milliseconds = round(timestamp_in_seconds, 3)
+    return timestamp_in_seconds_with_milliseconds
+
+
+# def main(args):
+def main(args, filename):
     args_bytetrack = argparse.Namespace()
     args_bytetrack.track_thresh = 0.2
     args_bytetrack.track_buffer = 200
@@ -157,25 +168,37 @@ def main(args):
 
     Engine.set_desired(['num_dets', 'bboxes', 'scores', 'labels'])
 
+
+    # filename = "2024-09-12_16-13-10"
+
     fps = 0
     # input video
-    cap = cv2.VideoCapture(args.vid)
+    # cap = cv2.VideoCapture(args.vid)
+    cap = cv2.VideoCapture("../sample_video/test/output_video_" + filename + ".mp4")
     # input webcam
     # cap = cv2.VideoCapture(0)
     
     video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (video_width,video_height))
+    # out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (video_width,video_height))
+    out = cv2.VideoWriter('../sample_video/test/output/' + filename + '_output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (video_width,video_height))
 
+    path_save_results = "../sample_video/test/results"
+    file_speed_w = open(path_save_results + "/" + filename + "_results.txt", "w")
 
-    path = "."
-    filename = "test"
-    file_speed_w = open(path + "/" + filename + "_results_converted_sort_speed.txt", "w")
+    path_timestamp = "../sample_video/test"
+    filename_timestamp = "frame_timestamps_" + filename + ".csv"
+
+    import pandas as pd
+    file_timestamp = path_timestamp + "/" + filename_timestamp
+    df = pd.read_csv(file_timestamp)
 
     roi_vertices = np.array([[414, 244], [539, 249], [761, 304], [829, 381], [661, 698], [161, 700], [117, 480], [198, 362]], np.int32)
 
     prev_centers = {}
     prev_times = {}
+
+    counter = 0
 
     while(True):
         ret, frame = cap.read()
@@ -183,8 +206,20 @@ def main(args):
         if frame is None:
             print('No image input!')
             break
+        
+        # current_time = time()
 
-        current_time = time()
+        row = df[df['Frame'] == counter]
+
+        current_time_ori = row['Timestamp'].values[0]
+        print(row['Frame'].values[0])
+        
+
+        current_time = process_timestamp(current_time_ori)
+
+        print(counter)
+        counter += 1
+        
 
         start = float(time())
         fps_str = "FPS:"
@@ -289,9 +324,9 @@ def main(args):
         
         
         fps = 1/(end - start)
-        # print(fps_str)
+        print(fps_str)
         cv2.putText(frame, "YOLOV8-BYTETrack", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        cv2.putText(frame, fps_str, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        # cv2.putText(frame, fps_str, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         if args.show:
             cv2.imshow("output", frame)
@@ -321,4 +356,9 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args)
+
+    list_filename = ["2024-09-12_16-53-03",
+                    "2024-09-12_17-01-23", "2024-09-12_17-07-25"]
+    
+    for i in range(len(list_filename)):
+        main(args, list_filename[i])

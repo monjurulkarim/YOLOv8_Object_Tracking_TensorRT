@@ -55,12 +55,12 @@ def xy2latlon(point):
     return (latitude, longitude)
 
 def calculate_center_point(bbox):
-## TO:DO: Needs to update
+
     x1, y1, x2, y2 = bbox
     return ((x1 + x2) / 2, (y1 + y2) / 2)
 
 def calculate_heading(prev_center, current_center):
-## TO:DO: Needs to update
+
     dx = current_center[0] - prev_center[0]
     dy = current_center[1] - prev_center[1]
     return math.degrees(math.atan2(dy, dx)) % 360

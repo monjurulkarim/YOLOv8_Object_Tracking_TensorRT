@@ -1,0 +1,520 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection Stream</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: left;
+            color: #333;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            /* Fixed height and scrolling */
+            height: 300px;
+            overflow-y: auto;
+            /* Smooth transitions */
+            transition: height 0.3s ease-in-out;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .no-objects {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bellevue Intersection</h1>
+        <h2>148th Ave NE & NE 20th St, Bellevue, WA 98007</h2>
+        <img src="http://10.19.42.32:5000/video_feed" alt="Live Video Stream">
+
+        <h2>Tracked result table</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Track ID</th>
+                    <th>Class</th>
+                    <th>Score</th>
+                    <th>Heading</th>
+                    <th>Speed</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody id="tracked-objects-body">
+
+            </tbody>
+        </table>
+        <div id="no-objects-message" class="no-objects" style="display: none;">
+            No objects detected yet.
+        </div>
+        <table id="additionalDataTable">
+        <thead>
+            <tr>
+                <th>Vehicle 1 ID</th>
+                <th>Vehicle 2 ID</th>
+                <th>Conflict Point (X)</th>
+                <th>Conflict Point (Y)</th>
+                <th>Time-to-Collision (sec)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    </div>
+
+    <script>
+        function updateTrackedObjects() {
+            fetch('/tracked_objects')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tracked-objects-body');
+                    const noObjectsMessage = document.getElementById('no-objects-message');
+                    tbody.innerHTML = ''; // Clear current rows
+
+                    if (data.length === 0) {
+                        noObjectsMessage.style.display = 'block';
+                    } else {
+                        noObjectsMessage.style.display = 'none';
+                        data.forEach(obj => {
+                            const row = document.createElement('tr');
+
+                            const trackIdCell = document.createElement('td');
+                            trackIdCell.textContent = obj.track_id;
+
+                            const classNameCell = document.createElement('td');
+                            classNameCell.textContent = obj.class_name;
+
+                            const scoreCell = document.createElement('td');
+                            scoreCell.textContent = obj.score.toFixed(2);
+
+                            const headingCell = document.createElement('td');
+                            headingCell.textContent = obj.heading.toFixed(2);
+
+                            const speedCell = document.createElement('td');
+                            speedCell.textContent = obj.speed.toFixed(2);
+
+                            const sizeCell = document.createElement('td');
+                            sizeCell.textContent = obj.size;
+
+                            row.appendChild(trackIdCell);
+                            row.appendChild(classNameCell);
+                            row.appendChild(scoreCell);
+                            row.appendChild(headingCell);
+                            row.appendChild(speedCell);
+                            row.appendChild(sizeCell);
+                            tbody.appendChild(row);
+                        });
+                    }
+                });
+        }
+
+        function updateAdditionalData() {
+            fetch('/conflict_data')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = additionalDataTable.getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // Clear existing table rows
+
+                    data.forEach(item => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = item[0]; // Vehicle 1 ID
+                        row.insertCell().textContent = item[1]; // Vehicle 2 ID
+                        row.insertCell().textContent = item[2][0]; // Conflict Point X
+                        row.insertCell().textContent = item[2][1]; // Conflict Point Y
+                        row.insertCell().textContent = item[3]; // Time-to-Collision
+                    });
+                });
+        }
+
+        // Fetch data every 500 milliseconds (0.5 seconds)
+        setInterval(updateTrackedObjects, 100);
+        setInterval(updateAdditionalData, 100);
+    </script>
+</body>
+</html>
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection Stream</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: left;
+            color: #333;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            /* Fixed height and scrolling */
+            height: 300px;
+            overflow-y: auto;
+            /* Smooth transitions */
+            transition: height 0.3s ease-in-out;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .no-objects {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bellevue Intersection</h1>
+        <h2>148th Ave NE & NE 20th St, Bellevue, WA 98007</h2>
+        <img src="http://10.19.42.32:5000/video_feed" alt="Live Video Stream">
+
+        <h2>Tracked result table</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Track ID</th>
+                    <th>Class</th>
+                    <th>Score</th>
+                    <th>Heading</th>
+                    <th>Speed</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody id="tracked-objects-body">
+
+            </tbody>
+        </table>
+        <div id="no-objects-message" class="no-objects" style="display: none;">
+            No objects detected yet.
+        </div>
+    </div>
+
+    <script>
+        function updateTrackedObjects() {
+            fetch('/tracked_objects')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tracked-objects-body');
+                    const noObjectsMessage = document.getElementById('no-objects-message');
+                    tbody.innerHTML = ''; // Clear current rows
+
+                    if (data.length === 0) {
+                        noObjectsMessage.style.display = 'block';
+                    } else {
+                        noObjectsMessage.style.display = 'none';
+                        data.forEach(obj => {
+                            const row = document.createElement('tr');
+
+                            const trackIdCell = document.createElement('td');
+                            trackIdCell.textContent = obj.track_id;
+
+                            const classNameCell = document.createElement('td');
+                            classNameCell.textContent = obj.class_name;
+
+                            const scoreCell = document.createElement('td');
+                            scoreCell.textContent = obj.score.toFixed(2);
+
+                            const headingCell = document.createElement('td');
+                            headingCell.textContent = obj.heading.toFixed(2);
+
+                            const speedCell = document.createElement('td');
+                            speedCell.textContent = obj.speed.toFixed(2);
+
+                            const sizeCell = document.createElement('td');
+                            sizeCell.textContent = obj.size;
+
+                            row.appendChild(trackIdCell);
+                            row.appendChild(classNameCell);
+                            row.appendChild(scoreCell);
+                            row.appendChild(headingCell);
+                            row.appendChild(speedCell);
+                            row.appendChild(sizeCell);
+                            tbody.appendChild(row);
+                        });
+                    }
+                });
+        }
+
+        // Fetch data every 500 milliseconds (0.5 seconds)
+        setInterval(updateTrackedObjects, 100);
+    </script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection Stream</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            /* Fixed height and scrolling */
+            height: 300px;
+            overflow-y: auto;
+            /* Smooth transitions */
+            transition: height 0.3s ease-in-out;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .no-objects {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bellevue Intersection</h1>
+        <h2>148th Ave NE & NE 20th St, Bellevue, WA 98007</h2>
+        <img src="http://10.19.42.32:5000/video_feed" alt="Live Video Stream">
+
+        <h2>Tracked result table</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Track ID</th>
+                    <th>Class</th>
+                    <th>Score</th>
+                    <th>Heading</th>
+                    <th>Speed</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody id="tracked-objects-body">
+
+            </tbody>
+        </table>
+        <div id="no-objects-message" class="no-objects" style="display: none;">
+            No objects detected yet.
+        </div>
+
+        <button id="pause-resume-button">Pause</button>
+    </div>
+
+    <script>
+        function updateTrackedObjects() {
+            fetch('/tracked_objects')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tracked-objects-body');
+                    const noObjectsMessage = document.getElementById('no-objects-message');
+                    tbody.innerHTML = ''; // Clear current rows
+
+                    if (data.length === 0) {
+                        noObjectsMessage.style.display = 'block';
+                    } else {
+                        noObjectsMessage.style.display = 'none';
+                        data.forEach(obj => {
+                            const row = document.createElement('tr');
+
+                            const trackIdCell = document.createElement('td');
+                            trackIdCell.textContent = obj.track_id;
+
+                            const classNameCell = document.createElement('td');
+                            classNameCell.textContent = obj.class_name;
+
+                            const scoreCell = document.createElement('td');
+                            scoreCell.textContent = obj.score.toFixed(2); // Two decimal places
+
+                            const headingCell = document.createElement('td');
+                            headingCell.textContent = obj.heading;
+
+                            const speedCell = document.createElement('td');
+                            speedCell.textContent = obj.speed;
+
+                            const sizeCell = document.createElement('td');
+                            sizeCell.textContent = obj.size;
+
+                            row.appendChild(trackIdCell);
+                            row.appendChild(classNameCell);
+                            row.appendChild(scoreCell);
+                            row.appendChild(headingCell);
+                            row.appendChild(speedCell);
+                            row.appendChild(sizeCell);
+                            tbody.appendChild(row);
+                        });
+                    }
+                });
+        }
+
+        let intervalId; // To store the interval ID
+        let isPaused = false;
+        let pausedFrameDataURL = null; // To store the data URL of the paused frame
+
+        const pauseResumeButton = document.getElementById('pause-resume-button');
+        const videoElement = document.querySelector('img'); // Assuming your video is an <img> tag
+        let currentVideoSrc = videoElement.src; // Store the initial video source
+
+
+        function pause() {
+            clearInterval(intervalId);
+
+            // Capture the current frame using onload event
+            videoElement.onload = function() {
+                pausedFrameDataURL = videoElement.src;
+                videoElement.src = pausedFrameDataURL; // Set the src to the paused frame
+            };
+
+            isPaused = true;
+            pauseResumeButton.textContent = 'Resume';
+        }
+
+        function resume() {
+            intervalId = setInterval(updateTrackedObjects, 100);
+            videoElement.onload = null; // Remove the onload event handler
+            videoElement.src = currentVideoSrc; // Resume updating the image source
+            pausedFrameDataURL = null; // Reset the paused frame data URL
+            isPaused = false;
+            pauseResumeButton.textContent = 'Pause';
+        }
+
+        // Initial start
+        resume();
+
+        pauseResumeButton.addEventListener('click', () => {
+            if (isPaused) {
+                resume();
+            } else {
+                pause();
+            }
+        });
+    </script>
+</body>
+</html> -->
