@@ -11,6 +11,8 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+srcs/archive/
+srcs/deep_sort/
 downloads/
 eggs/
 .eggs/
@@ -50,6 +52,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+sample_video/test/
 
 # Translations
 *.mo

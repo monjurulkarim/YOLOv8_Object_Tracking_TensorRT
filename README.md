@@ -1,62 +1,13 @@
-<div align="center">
+This repository contains the code developed by STAR Lab for object detection, tracking, and conflict point estimation on an edge device using live video streams. We utilized OpenCV to capture video from various sources, including cameras, video files, or RTSP streams, and implemented **YOLOv8 TensorRT** for object detection, along with **BYTETrack** for object tracking. Key features of this codebase include:
+- Object detection
+- Object tracking
+- Calculation of speed, heading, and distance
+- Conflict point estimation and time-to-collision (TTC) calculation
+- Output transmission via UDP protocol
+- Hosting a web app for visualizing results through a web interface
 
-# YOLOv8 Object Tracking TensorRT
-
-</div>
-
-
-Using OpenCV to capture video from camera or video file, then use **YOLOv8 TensorRT** to detect objects and **DeepSORT TensorRT** or **BYTETrack** to track objects. 
-
-Support for both **NVIDIA dGPU** and **Jetson** devices.
-
-## Demo
-
-### OpenCV + YOLOv8 + BYTETrack on NVIDA Geforce GTX 1660Ti
-![](assets/sample_yolov8_bytetrack.gif)
-
-
-
-
-## Performance
-
-### Both OpenCV YOLOv8 and DeepSORT TensorRT
-Using OpenCV to capture video from camera or video file, then use YOLOv8 TensorRT to detect objects and DeepSORT TensorRT to track objects.
-
-| Model | Device | FPS |
-| --- | --- | --- |
-| OpenCV + YOLOv8n + DeepSORT | NVIDIA dGPU GTX 1660Ti 6Gb| ~ |
-| OpenCV + YOLOv8n + DeepSORT | NVIDIA Jetson Xavier NX 8Gb | ~ |
-| OpenCV + YOLOv8n + DeepSORT | NVIDIA Jetson Orin Nano 8Gb | ~34 |
-
-### YOLOv8 TensorRT model
-
-Test speed of YOLOv8 TensorRT model using `trtexec` from TensorRT
-
-`/usr/src/tensorrt/bin/trtexec` on NVIDIA Jetson
-
-> batch size = 1
-
-| Model | Device | Throughput (qps) | Latency(ms) |
-| --- | --- | --- | --- |
-| `yolov8n.engine` | NVIDIA dGPU GTX 1660Ti 6Gb| ~419.742 | ~2.91736 |
-| `yolov8n.engine` | NVIDIA Jetson Xavier NX 8Gb | ~ | ~ |
-| `yolov8n.engine` | NVIDIA Jetson Orin Nano 8Gb | ~137.469 | ~137.469 |
-
-### DeepSORT TensorRT model
-
-Test speed of DeepSORT TensorRT model using `trtexec` from TensorRT
-
-`/usr/src/tensorrt/bin/trtexec` on NVIDIA Jetson 
-
-> batch size = 1
-
-| Model | Device | Throughput (qps) | Latency(ms) |
-| --- | --- | --- | --- |
-| `deepsort.engine` | NVIDIA dGPU GTX 1660Ti 6Gb| ~614.738 | ~1.52197 | 
-| `deepsort.engine` | NVIDIA Jetson Xavier NX 8Gb | ~ | ~ |
-| `deepsort.engine` | NVIDIA Jetson Orin Nano 8Gb | ~546.135 | ~1.82227 |
-
-## For NVIDIA dGPU
+The edge device used for this project is the NVIDIA JETSON ORIN NANO. Note: Different versions of MUST sensors are sold with various JETSON devices. Please ensure your MUST sensor includes this platform or a more advanced one.
+## Getting Started
 
 ### Environment
 
@@ -66,11 +17,7 @@ Test speed of DeepSORT TensorRT model using `trtexec` from TensorRT
 
 #### Clone repository
 
-Clone repository and submodules
-
-```bash
-git clone --recurse-submodules https://github.com/nabang1010/YOLOv8_DeepSORT_TensorRT.git
-```
+Clone repository from the shared google drive.
 
 #### Prepare enviroment
 
@@ -87,13 +34,13 @@ conda activate yolov8_ds
 ```
 
 ### Prepare models
-
 Go to **`refs/YOLOv8-TensorRT`** and install requirements for exporting models
 
 ```bash
 cd refs/YOLOv8-TensorRT
 pip3 install -r requirements.txt
 pip3 install tensorrt easydict pycuda lap cython_bbox
+pip3 install flask
 ```
 Install `python3-libnvinfer`
 
@@ -101,9 +48,12 @@ Install `python3-libnvinfer`
 sudo apt-get install python3-libnvinfer
 ```
 
-Download YOLOv8 weights from [ultralytics](https://github.com/ultralytics/ultralytics) here: [yolov8n.pt](https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt) and save in folder **`models/to_export`**
+## (Optional steps)
+The following steps (1-3) are optional because we have already shared our converted weights which are ready to be used. You don't need to convert the weights.
 
-**Export YOLOv8 ONNX model**
+1. Save the YOLOv8 weights in folder **`models/to_export`**
+
+2. **Export YOLOv8 ONNX model**
 
 In **`refs/YOLOv8-TensorRT`** run the following command to export YOLOv8 ONNX model
 
@@ -123,7 +73,7 @@ The output `.onnx` model will be saved in **`models/to_export`** folder, move th
 ```bash
 mv ../../models/to_export/yolov8n.onnx ../../models/onnx/yolov8n.onnx
 ```
-**Export YOLOv8 TensorRT model**
+3. **Export YOLOv8 TensorRT model**
 
 In **`refs/YOLOv8-TensorRT`** run the following command to export YOLOv8 TensorRT model
 
@@ -148,58 +98,33 @@ mv ../../models/onnx/yolov8n.engine ../../models/engine/yolov8n.engine
 bash build_opencv.sh
 ```
 
-**Export DeepSORT TensorRT model *(if use BYTETrack, ignore this step)***
+## Some code description
 
+`srcs/v2_stream.py`: This is the main script responsible for running and generating all required results. Users need to specify different parser arguments using flags (e.g., `--show`, `--vid`). Running this script starts the web app, allowing users to visualize the results in a browser within the local network.
+`srcs/template/index.html`: This file contains the HTML structure of the web app used for visualization.
+`srcs/config.py`: contains different parameters
+`models/` : contains the weights
 
-Install `libeigen3-dev`
-```bash
-apt-get install libeigen3-dev
-```
-Go to **`refs/deepsort_tensorrt`** and run the following command to build `onnx2engine`
-
-```bash
-cd refs/deepsort_tensorrt
-mkdir build
-cd build
-cmake ..
-make -j$(nproc)
-
-```
-
-> If catch error `fatal error: Eigen/Core: No such file or directory`, replace `#include <Eigen/*>` with `#include <eigen3/Eigen/*>` in all files of this repo (`datatype.h`, `kalmanfilter.cpp`) and rebuild again.
-
-> If catch error `error: looser exception specification on overriding virtual function 'virtual void Logger::log(nvinfer1::ILogger::Severity`  add `noexcept` before `override` in `logger.h` line 239 and rebuild again.
-
-Run following command to export DeepSORT TensorRT model
-
-```bash
-./build/onnx2engine ../../models/onnx/deepsort.onnx ../../models/engine/deepsort.engine
-```
+For more details we added additional comments in the code.
 ### Run script
 
-**Go to `src` folder**
-
-```bash
-cd src
 ```
 
-**Run YOLOv8 + DeepSORT**
+**Go to `srcs` folder**
 
 ```bash
-python3 yolov8_deepsort_trt.py --show
-
+cd srcs
 ```
+
+
 **Run YOLOv8 + BYTETrack**
 
 ```bash
-python3 yolov8_bytetrack_trt.py --show
+python3 yolov8_bytetrack_starlab.py
 
 ```
 
-## For NVIDIA Jetson Device
-
-***Coming soon***
-
+Running this code will start an web app which can be accessed using any browser. Please make sure to define your devices IP address in the `templates/index.html` at line # 71.
 
 ---
 
@@ -207,8 +132,6 @@ python3 yolov8_bytetrack_trt.py --show
 
 - [ultralytics](https://github.com/ultralytics/ultralytics) 
 - [YOLOv8-TensorRT](https://github.com/triple-Mu/YOLOv8-TensorRT)
-- [deepsort_tensorrt](https://github.com/GesilaA/deepsort_tensorrt)
-- [yolov5_deepsort_tensorrt](https://github.com/cong/yolov5_deepsort_tensorrt)
 - [ByteTrack](https://github.com/ifzhang/ByteTrack)
 
 

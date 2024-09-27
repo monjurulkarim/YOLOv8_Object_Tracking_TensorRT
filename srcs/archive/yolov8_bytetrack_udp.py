@@ -70,7 +70,7 @@ def main(args):
     
     video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (video_width,video_height))
+    # out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 20, (video_width,video_height))
     while(True):
         ret, frame = cap.read()
         
@@ -100,9 +100,13 @@ def main(args):
         
         bboxes -= dwdh
         bboxes /= ratio
+
+
+        ### Correct version ------------
+
         output = []
         for (bbox, score, label) in zip(bboxes, scores, labels):
-            if label == 0 and score.item() > 0.2:
+            if score.item() > 0.2:
                 bbox = bbox.round().int().tolist()
                 cls_id = int(label)
                 cls = CLASSES[cls_id]
@@ -151,51 +155,20 @@ def main(args):
                 break        
         out.write(frame)
 
+      ## -------------------  
+
     cap.release()
     cv2.destroyAllWindows()
     sock.close()
 
         
-    #     if output != []:
-    #         online_targets = tracker.update(output, info_imgs, img_size)
-    #         online_tlwhs = []
-    #         online_ids = []
-    #         online_scores = []
-    #         for t in online_targets:
-    #             tlwh = t.tlwh
-    #             tid = t.track_id
-    #             online_tlwhs.append(tlwh)
-    #             online_ids.append(tid)
-    #             online_scores.append(t.score)
-                
-    #             if args.show:
-    #                 cv2.rectangle(frame, (int(tlwh[0]), int(tlwh[1])), (int(tlwh[0] + tlwh[2]), int(tlwh[1] + tlwh[3])), get_random_color(tid), 2)
-    #                 cv2.putText(frame, str(tid), (int(tlwh[0]), int(tlwh[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            
-    #     end = float(time())     
-  
-        
-
     
-    #     fps = 1/(end - start)
-    #     print(fps_str)
-    #     cv2.putText(frame, "YOLOV8-BYTETrack", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-    #     cv2.putText(frame, fps_str, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-    #     if args.show:
-    #         cv2.imshow("output", frame)
-    #         if cv2.waitKey(1) & 0xFF == ord('q'):
-    #             break        
-    #     out.write(frame)
-
-    # cap.release()
-    # cv2.destroyAllWindows()
-    # # tracker_trt.clear()
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')
-    parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/2024_08_28_13_23_01.mp4')
+    parser.add_argument('--vid', type=str, help='Video file', default='../sample_video/001.mp4')
     # parser.add_argument('--vid', type=str, help='Video file', default='rtsp://65.76.54.158:554/1/h264major')
     parser.add_argument('--show',
                         action='store_true',
