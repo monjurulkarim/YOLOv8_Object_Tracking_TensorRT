@@ -12,12 +12,18 @@ The edge device used for this project is the NVIDIA JETSON ORIN NANO. Note: Diff
 ### Environment
 
 - NVIDIA CUDA: 11.4
-- NVIDIA TensorRT: 8.5.2
+- NVIDIA TensorRT >= 8.5.2
 
 
 #### Clone repository
 
-Clone repository from the shared google drive.
+#### Clone repository
+
+Clone repository and submodules
+
+```bash
+git clone --recurse-submodules https://github.com/monjurulkarim/YOLOv8_Object_Tracking_TensorRT.git
+```
 
 #### Prepare enviroment
 
@@ -69,7 +75,7 @@ python3 export-det.py \
 --device cuda:0
 ```
 
-The output `.onnx` model will be saved in **`models/to_export`** folder, move the model to **`models/onnx`** folder 
+The output `.onnx` model will be saved in **`models/to_export`** folder, move the model to **`models/onnx`** folder
 ```bash
 mv ../../models/to_export/yolov8n.onnx ../../models/onnx/yolov8n.onnx
 ```
@@ -86,7 +92,7 @@ python3 build.py \
 --fp16  \
 --device cuda:0
 ```
-The output `.engine` model will be saved in **`models/onnx`** folder, move the model to **`models/trt`** folder 
+The output `.engine` model will be saved in **`models/onnx`** folder, move the model to **`models/trt`** folder
 
 ```bash
 mv ../../models/onnx/yolov8n.engine ../../models/engine/yolov8n.engine
@@ -130,9 +136,6 @@ Running this code will start an web app which can be accessed using any browser.
 
 # References
 
-- [ultralytics](https://github.com/ultralytics/ultralytics) 
+- [ultralytics](https://github.com/ultralytics/ultralytics)
 - [YOLOv8-TensorRT](https://github.com/triple-Mu/YOLOv8-TensorRT)
 - [ByteTrack](https://github.com/ifzhang/ByteTrack)
-
-
-
