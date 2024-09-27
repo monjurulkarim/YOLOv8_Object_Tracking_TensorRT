@@ -115,7 +115,7 @@ bash build_opencv.sh
 For more details we added additional comments in the code.
 ### Run script
 
-```
+
 
 **Go to `srcs` folder**
 
