@@ -104,7 +104,7 @@ bash build_opencv.sh
 
 ## Some code description
 
-`srcs/v2_stream.py`: This is the main script responsible for running and generating all required results. Users need to specify different parser arguments using flags (e.g., `--show`, `--vid`). Running this script starts the web app, allowing users to visualize the results in a browser within the local network.
+`srcs/yolov8_bytetrack_starlab.py`: This is the main script responsible for running and generating all required results. Users need to specify different parser arguments using flags (e.g., `--show`, `--vid`). Running this script starts the web app, allowing users to visualize the results in a browser within the local network.
 `srcs/template/index.html`: This file contains the HTML structure of the web app used for visualization.
 `srcs/config.py`: contains different parameters
 `models/` : contains the weights
