@@ -131,7 +131,7 @@ python3 yolov8_bytetrack_starlab.py
 
 ```
 
-Running this code will start an web app which can be accessed using any browser. Please make sure to define your devices IP address in the `templates/index.html` at line # 71.
+Running this code will start an web app which can be accessed using any browser. Please make sure to define your devices IP address in the `templates/index.html` at line https://github.com/monjurulkarim/YOLOv8_Object_Tracking_TensorRT/blob/a11f3390e31e32041fb9ba2187e59f0fab8ca429/srcs/templates/index.html#L71.
 
 ---
 
