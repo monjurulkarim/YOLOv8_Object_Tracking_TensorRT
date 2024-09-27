@@ -500,10 +500,13 @@ def get_tracked_objects():
     global tracked_objects
     return jsonify(tracked_objects)
 
+
+## For speed up you may not want to transmit conflict data (most of the time no conflict actually), you can comment out this
 @app.route('/conflict_data')
 def get_conflict_data():
     global conflict_list
     return jsonify(conflict_list)
+##===
 
 @app.route('/')
 def index():
@@ -513,9 +516,8 @@ def index():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')  
-    parser.add_argument('--vid', type=str, help='Video files', default='rtsp://wowza01.bellevuewa.gov:1935/live/CCTV047NE.stream')  
-    # parser.add_argument('--vid', type=str, help='Video files', default='../sample_video/2024_08_28_13_03_00_raw.mp4') # for video stream define your rtsp protocol
+    parser.add_argument('--engine', type=str, help='Engine file', default='../models/engine/yolov8n.engine')
+    parser.add_argument('--vid', type=str, help='Video files', default='../sample_video/2024_08_28_13_03_00_raw.mp4') # for video stream define your rtsp protocol
     parser.add_argument('--device', type=str, default='cuda:0', help='TensorRT infer device')
     parser.add_argument('--udp_save', action='store_true', help='Save the 9 outputs in txt files')
     parser.add_argument('--recorded_time', action='store_true', help='Use time when the image was recored. From csv file.')
