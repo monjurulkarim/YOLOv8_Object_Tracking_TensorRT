@@ -11,11 +11,9 @@ The edge device used for this project is the NVIDIA JETSON ORIN NANO. Note: Diff
 
 ### Environment
 
-- NVIDIA CUDA: 11.4
-- NVIDIA TensorRT >= 8.5.2
+- NVIDIA CUDA: 12.2
+- NVIDIA TensorRT >= 8.6.2
 
-
-#### Clone repository
 
 #### Clone repository
 
